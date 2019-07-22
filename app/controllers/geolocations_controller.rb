@@ -7,36 +7,32 @@ class GeolocationsController < ApplicationController
   end
 
   def create
-    search_result = geoip.search(params[:ip_or_hostname].downcase)
-    return head :not_found if search_result[:error].present?
+    @geolocation = Geolocation.new(geoip_result)
+    return error_response(@geolocation.errors) unless @geolocation.save
 
-    search_result[:ip_or_hostname] = params[:ip_or_hostname]
-    search_result.delete(:ip)
-    @geolocation = Geolocation.new(search_result)
-    if @geolocation.save
-      json_response(@geolocation, :created)
-    else
-      json_response(@geolocation.errors, :unprocessable_entity)
-    end
+    json_response(@geolocation, :created)
   end
 
   def destroy
     @geolocation.destroy
-    head :ok
+    head :no_content
   end
 
   private
     def set_geolocation
-      @geolocation = Geolocation.find_by!(ip_or_hostname: params[:ip_or_hostname].downcase)
+      @geolocation = Geolocation.find_by!(ip_or_hostname: permit_params[:ip_or_hostname].downcase)
     rescue ActiveRecord::RecordNotFound
       head :not_found
     end
 
-    def permit_params
-      params.permit(:ip_or_hostname)
+    def geoip_result
+      search_result = Geoip.new.search(permit_params[:ip_or_hostname].downcase)
+      search_result[:ip_or_hostname] = permit_params[:ip_or_hostname]
+      search_result.delete(:ip)
+      search_result
     end
 
-    def geoip
-      @geoip ||= Geoip.new
+    def permit_params
+      params.permit(:ip_or_hostname)
     end
 end
