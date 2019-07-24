@@ -11,6 +11,10 @@ class GeolocationsController < ApplicationController
     return error_response(@geolocation.errors) unless @geolocation.save
 
     json_response(@geolocation, :created)
+  rescue Geoip::NotFound
+    head :not_found
+  rescue Net::OpenTimeout, Net::ReadTimeout
+    head :request_timeout
   end
 
   def destroy
@@ -23,6 +27,9 @@ class GeolocationsController < ApplicationController
       @geolocation = Geolocation.find_by!(ip_or_hostname: permit_params[:ip_or_hostname].downcase)
     rescue ActiveRecord::RecordNotFound
       head :not_found
+    rescue ActiveRecord::ConnectionTimeoutError
+      return head :request_timeout if action_name == 'destroy'
+      json_response(geoip_result)
     end
 
     def geoip_result

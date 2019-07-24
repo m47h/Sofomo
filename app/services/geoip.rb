@@ -1,6 +1,9 @@
 require 'uri'
 require 'net/http'
+
 class Geoip
+  class NotFound < StandardError; end
+
   DEFAULT_URI = URI.parse("https://freegeoip.app/")
   FORMATS = %w[json jsonp csv xml].freeze
 
@@ -11,6 +14,8 @@ class Geoip
   def search(ip_or_hostname = '', format = FORMATS.first)
     request = create_request(path(ip_or_hostname, format))
     @response = @http.request(request)
+    raise Geoip::NotFound if response.is_a? Net::HTTPNotFound
+
     parse_response
   end
 
@@ -29,8 +34,8 @@ class Geoip
 
   def create_request(path)
     request = Net::HTTP::Get.new(path)
-    request["accept"] = 'application/json'
-    request["content-type"] = 'application/json'
+    request["Accept"] = 'application/json'
+    request["Content-Type"] = 'application/json'
     request
   end
 
@@ -47,4 +52,3 @@ class Geoip
     "/format/ip_or_hostname".gsub('format', format).gsub('ip_or_hostname', ip_or_hostname)
   end
 end
-

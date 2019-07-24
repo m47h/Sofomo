@@ -4,8 +4,15 @@
 # model remove the '{}' from the fixture names and add the columns immediately
 # below each fixture, per the syntax in the comments below
 #
-one: {}
-# column: value
-#
-two: {}
-# column: value
+one:
+  ip_or_hostname: "123.123.123.123"
+  country_code: "CN"
+  country_name: "China"
+  region_code: "BJ"
+  region_name: "Beijing"
+  city: "Beijing"
+  zip_code: "11-111"
+  time_zone: "Asia/Shanghai"
+  latitude: "39.9288"
+  longitude: "116.3889"
+  metro_code: "0"
